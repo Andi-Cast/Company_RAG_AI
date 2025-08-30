@@ -8,12 +8,18 @@ from get_embedding_function import get_embedding_function
 CHROMA_PATH = "chroma_db"
 
 PROMPT_TEMPLATE = """
-Answer the question based only on the context below.
+You are an AI assistant for AC Software employees. 
+Use only the provided context to answer. 
+If the answer is not in the context, respond with "I don’t know based on the provided information."
+
+When possible:
+- Answer in full sentences.  
+- Use bullet points for lists.  
+- Quote exact policy text if relevant.  
+
 Context:
 {context}
 
----
-Answer the following based on the context above. If you don't know the answer, just say that you don't know, don't try to make up an answer.
 Question: {question}
 """
 
@@ -32,7 +38,7 @@ def query_rag(question: str):
         embedding_function=embedding_function
     )
 
-    results = db.similarity_search(question, k=3)
+    results = db.similarity_search(question, k=5)
 
     context = "\n\n".join([doc.page_content for doc in results])
     prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)

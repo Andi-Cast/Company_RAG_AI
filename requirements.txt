@@ -1,0 +1,9 @@
+langchain
+langchain-core
+langchain-community   # still needed for loaders & splitters
+langchain-huggingface
+langchain-chroma
+langchain-ollama 
+chromadb
+sentence-transformers
+pypdf

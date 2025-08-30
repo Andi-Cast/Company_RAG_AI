@@ -1,0 +1,50 @@
+import argparse
+from langchain_chroma import Chroma
+from langchain.prompts import ChatPromptTemplate
+from langchain_ollama import OllamaLLM
+
+from get_embedding_function import get_embedding_function  
+
+CHROMA_PATH = "chroma_db"
+
+PROMPT_TEMPLATE = """
+Answer the question based only on the context below.
+Context:
+{context}
+
+---
+Answer the following based on the context above. If you don't know the answer, just say that you don't know, don't try to make up an answer.
+Question: {question}
+"""
+
+def main(): 
+    parser = argparse.ArgumentParser(description="Query the Chroma database with a question.")
+    parser.add_argument("question", type=str, help="The question to ask the database.")
+    args = parser.parse_args()
+    question = args.question
+
+    query_rag(question)
+
+def query_rag(question: str):
+    embedding_function = get_embedding_function()
+    db = Chroma(
+        persist_directory=CHROMA_PATH, 
+        embedding_function=embedding_function
+    )
+
+    results = db.similarity_search(question, k=3)
+
+    context = "\n\n".join([doc.page_content for doc in results])
+    prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
+    prompt = prompt_template.format(context=context, question=question)
+
+    model = OllamaLLM(model="llama3.2:3b", base_url="http://localhost:11434")
+    response = model.invoke(prompt)
+
+    sources = [doc.metadata.get("source", "Unknown") for doc in results]
+    formatted_response = f"Answer: {response}\n\nSources: {', '.join(sources)}"
+    print(formatted_response)
+    return response
+
+if __name__ == "__main__":
+    main()

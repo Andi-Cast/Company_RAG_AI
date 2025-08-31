@@ -1,0 +1,6 @@
+example-runs/
+chroma_db/
+.DS_Store
+venv/
+__pycache__/
+../.DS_Store

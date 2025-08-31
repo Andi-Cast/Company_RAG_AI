@@ -38,19 +38,23 @@ def query_rag(question: str):
         embedding_function=embedding_function
     )
 
-    results = db.similarity_search(question, k=5)
+    results = db.similarity_search_with_score(question, k=5)
 
-    context = "\n\n".join([doc.page_content for doc in results])
+    context = "\n\n".join([doc.page_content for doc, _score in results])
     prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
     prompt = prompt_template.format(context=context, question=question)
 
     model = OllamaLLM(model="llama3.2:3b", base_url="http://localhost:11434")
     response = model.invoke(prompt)
 
-    sources = [doc.metadata.get("source", "Unknown") for doc in results]
-    formatted_response = f"Answer: {response}\n\nSources: {', '.join(sources)}"
+    sources = [doc.metadata.get("id", None) for doc, _score in results]
+    formatted_response = f"Response: {response}\nSources: {sources}"
+
     print(formatted_response)
-    return response
+    return {
+        "answer": response,
+        "sources": sources
+    }
 
 if __name__ == "__main__":
     main()
